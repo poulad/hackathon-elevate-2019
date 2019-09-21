@@ -3,21 +3,20 @@ pool:
 
 steps:
 
-- task: Docker@2
-  displayName: Push Image to Docker Hub
-  inputs:
-    containerRegistry: dockerHub
-    repository: poulad/uniwards-web-api
-    command: buildAndPush
-    tags: |
-      latest
-      $(Build.BuildId)
+# - task: Docker@2
+#   displayName: Push Image to Docker Hub
+#   inputs:
+#     containerRegistry: dockerHub
+#     repository: poulad/uniwards-web-api
+#     command: buildAndPush
+#     tags: |
+#       latest
+#       $(Build.BuildId)
 
 - task: Docker@2
-  displayName: Push image
+  displayName: Build & Push Image to Heroku
   inputs:
     containerRegistry: heroku
     repository: uniwards-api/web
-    command: push
-    tags: |
-      latest
+    command: buildAndPush
+    tags: latest
