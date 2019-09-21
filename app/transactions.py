@@ -3,6 +3,7 @@ import yelp_api as yelp
 import re
 from fuzzywuzzy import process
 
+# should feed in transaction data as csv, modify below
 
 finance = ["idp purchase", "transfer", "payment", "interac"]
 
