@@ -11,10 +11,9 @@ steps:
     command: buildAndPush
 
 - bash: |
-    set +x -e
-    export
+    set -ex
 
-    docker_image_id=$(docker inspect registry.heroku.com/uniwards-api/web:66 --format={{.Id}}) 
+    docker_image_id=$(docker inspect registry.heroku.com/uniwards-api/web:$BUILD_BUILDID --format={{.Id}}) 
     echo '~~~~~~~~~~~~~~~~'
     echo "docker_image_id: $docker_image_id"
     echo '~~~~~~~~~~~~~~~~'
