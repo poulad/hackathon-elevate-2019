@@ -9,22 +9,6 @@ db = client.uniwards_db
 promos = db.promotions
 
 
-months = {
-    "january": 1,
-    "february": 2,
-    "march": 3,
-    "april": 4,
-    "may": 5,
-    "june": 6,
-    "july": 7,
-    "august": 8,
-    "september": 9,
-    "october": 10,
-    "november": 11,
-    "december": 12,
-}
-
-
 def create_promo(promotion_request):
     """
     :param promotion: (json object) promotion information as a JSON object
@@ -51,26 +35,24 @@ def does_qualify(promotion, transaction):
         # already satsified this
         return True
     
-    today = datetime.today()
-    curr_amount = promotion["curr_amount"]
-    trans_categories = transaction["categories"]
-    amt = transaction["amount"]
-    promo_type = promotion["type"]
-    try:
-        qualifier = promotion["day"]
-    except:
-        qualifier = promotion["minimum"]
-
-    if transaction["name"] != promotion["name"] and promo_type == "monthly_specific":
+    # check that in the right month
+    if promotion["month"] != transaction["month"]:
         return False
-    if months[transaction["month"]] != months[promotion["month"]]:
+    # check that dealing with right company if "monthly specific"
+    if promotion["type"] == "monthly_specific" and promotion["name"] != transaction["name"]:
         return False
-    if promo_type == "day_specific" and today.day == qualifier:
+    # check that if dealing with categories, some match
+    if promotion["type"] == "monthly_category" and any([category for category in promotion["categories"] if category in transaction["categories"]]) == False:
+        return False
+    # check that if dealing with daily, the days match
+    if promotion["type"] == "daily_specific" and promotion["day"] != transaction["day"]:
+        return False
+    elif promotion["type"] == "daily_specific":
         return True
 
-    if promo_type == "monthly_category" and not any([category for category in promotion["categories"] if category in transaction["categories"]]):
-        # none of the categories match
-        return False
+    curr_amount = promotion["curr_amount"]
+    qualifier = promotion["minimum"]
+    amt = transaction["amount"]
 
     # update amount
     curr_amount += amt
@@ -102,7 +84,7 @@ test_transaction = {
     ],
     "amount": 60,
     "month": "january",
-    "day": 19,
+    "day": 21,
 } 
 
 test_promotions = {
@@ -129,7 +111,6 @@ test_promotions = {
             "desc": "30_percent_discount",
             "month": "january",
             "day": 31,
-            "minimum": 50,
             "discount_percent": 30,
         }
     ],
