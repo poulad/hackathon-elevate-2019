@@ -3,10 +3,12 @@ from datetime import datetime
 import calendar
 from pymongo import MongoClient
 import yelp_api as yelp
+import qrcode as qr
 
 client = MongoClient('mongodb+srv://db_user:Password1@uniwards-9pud4.mongodb.net/test?retryWrites=true&w=majority')
 db = client.uniwards_db
 promos = db.promotions
+trans = db.transactions
 
 
 def create_promo(promotion_request):
@@ -66,15 +68,34 @@ def does_qualify(promotion, transaction):
         return False
 
 
-def check_transaction(transaction):
+def get_qr_code(promotion):
     """
-    Checks a given transaction against all promotions
+    Creates a QR code with given discount + saves it to "qrcodes" directory
     """
-    for promo in promos.find():
-        if does_qualify(promo, test_transaction):
-            print("You qualified for the {} at {}".format(promo["desc"], promo["name"]))
+    discount = "{}%".format(promotion["discount_percent"])
+    qr_code = qr.make("{} at {}".format(discount, promotion["name"]))
+    qr_code.save('qrcodes/{}_{}_qr_code.jpg'.format(promotion["name"].replace(" ","_"), promotion["_id"]))
 
-    return True
+    return qr_code
+
+
+def check_transactions():
+    """
+    Checks all database transactions against all promotions
+    """
+    # check if any apply
+    for transaction in trans.find():
+        for promo in promos.find():
+            if does_qualify(promo, transaction):
+                print("You qualified for the {} at {}".format(promo["desc"], promo["name"]))
+
+    # return QR codes for qualifying deals
+    codes = []
+    for promo in promos.find():
+        if promo["qualify"] == "true":
+            codes.append(get_qr_code(promo))
+
+    return codes
 
 
 test_transaction = {
@@ -118,5 +139,5 @@ test_promotions = {
 
 # for promo in test_promotions["test_promos"]:
 #     create_promo(promo)
-# check_transaction(test_transaction)
+check_transactions()
 
