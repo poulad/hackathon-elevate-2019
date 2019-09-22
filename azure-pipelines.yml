@@ -22,4 +22,4 @@ steps:
       -H "Authorization: Bearer 53e37733-6f7c-42dc-9f01-b34a14960f94"     \
       -H "Content-Type: application/json"                                 \
       -H "Accept: application/vnd.heroku+json; version=3.docker-releases" \
-      -d '{"updates":[{"type":"dyno","docker_image":"$docker_image_id"}]}'
+      -d "{\"updates\":[{\"type\":\"web\",\"docker_image\":\"$docker_image_id\"}]}"
