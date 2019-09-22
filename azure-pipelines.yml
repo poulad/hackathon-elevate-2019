@@ -9,6 +9,9 @@ steps:
     containerRegistry: heroku
     repository: uniwards-api/web
     command: buildAndPush
+    tags: |
+      latest
+      $(Build.BuildId)
 
 # - bash: |
 #     set -ex
