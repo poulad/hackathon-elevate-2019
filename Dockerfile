@@ -8,4 +8,5 @@ RUN pip install -r requirements.txt
 ENV PORT 80
 EXPOSE 80
 
-ENTRYPOINT ["python", "app.py"]
+ENTRYPOINT ["python"]
+CMD ["/app/app.py"]
