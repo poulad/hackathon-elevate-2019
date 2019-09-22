@@ -35,7 +35,7 @@ def does_qualify(promotion, transaction):
     """
     if promotion["qualify"] == "true":
         # already satsified this
-        return True
+        return False
     
     # check that in the right month
     if promotion["month"] != transaction["month"]:
@@ -50,6 +50,7 @@ def does_qualify(promotion, transaction):
     if promotion["type"] == "daily_specific" and promotion["day"] != transaction["day"]:
         return False
     elif promotion["type"] == "daily_specific":
+        result = promos.update_one({'_id': promotion["_id"]}, {"$set": {"qualify":"true"}}, upsert=True)
         return True
 
     curr_amount = promotion["curr_amount"]
@@ -58,11 +59,11 @@ def does_qualify(promotion, transaction):
 
     # update amount
     curr_amount += amt
-    result = promos.update_one({'desc': promotion["desc"]}, {"$set": {"curr_amount":curr_amount}}, upsert=True)
+    result = promos.update_one({'_id': promotion["_id"]}, {"$set": {"curr_amount":curr_amount}}, upsert=True)
     
     if curr_amount >= qualifier:
         # update qualify param
-        result = promos.update_one({'desc': promotion["desc"]}, {"$set": {"qualify":"true"}}, upsert=True)
+        result = promos.update_one({'_id': promotion["_id"]}, {"$set": {"qualify":"true"}}, upsert=True)
         return True
     else:
         return False
@@ -87,7 +88,7 @@ def check_transactions():
     for transaction in trans.find():
         for promo in promos.find():
             if does_qualify(promo, transaction):
-                print("You qualified for the {} at {}".format(promo["desc"], promo["name"]))
+                print("{}: You qualified for the {} at {}".format(promo["_id"],promo["desc"], promo["name"]))
 
     # return QR codes for qualifying deals
     codes = []
@@ -143,5 +144,5 @@ test_promotions = {
 
 # for promo in test_promotions["test_promos"]:
 #     create_promo(promo)
-# check_transactions()
+check_transactions()
 
