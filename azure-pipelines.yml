@@ -11,7 +11,9 @@ steps:
     command: buildAndPush
 
 - bash: |
-    docker_image_id=$(docker inspect my_image --format={{.Id}}) 
+    set +x -e
+
+    docker_image_id=$(docker inspect uniwards-api/web --format={{.Id}}) 
     echo '~~~~~~~~~~~~~~~~'
     echo "docker_image_id: $docker_image_id"
     echo '~~~~~~~~~~~~~~~~'
