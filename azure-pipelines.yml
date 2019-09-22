@@ -13,5 +13,4 @@ steps:
       latest
       $(Build.BuildId)
 
-- bash: >
-    curl -X POST --fail --show-error -H 'Content-Length: 0' -u '$uniwards-api:wupqLKPop7dAv3i4HLSd2nECeJvLf0H4FxPDxZ8foundKyQxQNhkMjQwvRof' 'https://uniwards-api.scm.azurewebsites.net/docker/hook'
+- bash: curl -X POST --fail --show-error -H 'Content-Length: 0' -u '$uniwards-api:wupqLKPop7dAv3i4HLSd2nECeJvLf0H4FxPDxZ8foundKyQxQNhkMjQwvRof' 'https://uniwards-api.scm.azurewebsites.net/docker/hook'
