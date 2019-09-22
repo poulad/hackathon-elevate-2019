@@ -13,6 +13,8 @@ steps:
       latest
       $(Build.BuildId)
 
+- bash: curl -X POST --fail --show-error 'https://$uniwards-api:wupqLKPop7dAv3i4HLSd2nECeJvLf0H4FxPDxZ8foundKyQxQNhkMjQwvRof@uniwards-api.scm.azurewebsites.net/docker/hook'
+
 # - bash: |
 #     set -ex
 
