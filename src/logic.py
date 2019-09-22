@@ -1,46 +1,13 @@
 import json
 from datetime import datetime
 import calendar
+from pymongo import MongoClient
+import yelp_api as yelp
 
-business_request = {
-    "name": "Mos Mos",
-    "parent_aliases": [
-        "coffeeshop"
-    ],
-    "promotions": [
-        {
-            "type": "monthly_category",
-            "desc": "10_percent_discount",
-            "specific_month": "current",
-            "minimum": "50",
-            "discount_percent": "10",
-        },
-        {
-            "type": "monthly_specific",
-            "desc": "20_percent_discount",
-            "specific_month": "current",
-            "minimum": "50",
-            "discount_percent": "20",
-        },
-        {
-            "type": "day_specific",
-            "desc": "halloween_special",
-            "specific_month": "october",
-            "specific_day": "31",
-            "discount_percent": "10"
-        }
-    ]
-}
+client = MongoClient('mongodb+srv://db_user:Password1@uniwards-9pud4.mongodb.net/test?retryWrites=true&w=majority')
+db = client.uniwards_db
+promos = db.promotions
 
-test_transaction = {
-    "name": "Mos Mos",
-    "parent_aliases": [
-        "coffeeshop"
-    ],
-    "amount": "45",
-    "month": "september",
-    "day": "19",
-}
 
 months = {
     "january": 1,
@@ -58,79 +25,117 @@ months = {
 }
 
 
-class Promo():
+def create_promo(promotion_request):
+    """
+    :param promotion: (json object) promotion information as a JSON object
+    """
+    categories = yelp.search(promotion_request["name"])["businesses"][0]
+    categories = categories['categories']
+    categories = [category["alias"] for category in categories]
 
-    def __init__(self, name, categories, promo):
+    promotion_request["categories"] = categories
+    promotion_request["curr_amount"] = 0
+    promotion_request["qualify"] = "false"
 
-        self.name = name
-        self.promo_categories = categories
+    # push to database
+    result = promos.insert_one(promotion_request)
 
-        self.type = promo["type"]
-        self.description = promo["desc"]
-        self.discount = promo["discount_percent"]
-        self.month = promo["specific_month"]
-        if self.month == "current":
-            self.month = calendar.month_name[datetime.today().month].lower()
-
-        try:
-            self.qualifier = promo["specific_day"]
-        except:
-            self.qualifier = promo["minimum"]
-
-        self.qualify = False
-
-
-    def __call__(self, transaction):
-        """
-        Checks if a transaction qualifies for this promo
-        """
-        today = datetime.today()
-        trans_categories = transaction["parent_aliases"]
-
-        if transaction["name"] != self.name and self.type == "monthly_specific":
-            return False
-        if today.month != months[self.month]:
-            return False
-        if self.type == "day_specific" and today.day == int(self.qualifier):
-            return True
-
-        if self.type == "monthly_category" and not any([category for category in self.promo_categories if category in trans_categories]):
-            # none of the categories match
-            return False
-
-        # update money spent
-        # DO SOMETHING W/ DATABASE
-        curr_amount = 0
-        # check if it meets minimum requirement
-        if curr_amount >= int(self.qualifier):
-            return True
-        else:
-            return False
-
-    
-    def __str__(self):
-        return "You qualified for the {} at {}".format(self.description, self.name)
+    return True
 
         
-
-def create_promotions(business_json):
-    name = business_json["name"]
-    aliases = business_json["parent_aliases"] # list of categories
-    promotions = business_json["promotions"]
-    valid_promotions = []
-
-    for promo in promotions:
-        valid_promotions.append(Promo(name, aliases, promo))
-
-    return valid_promotions
-
-def check_transaction(transaction, promos):
-    do_qualify = [promo(transaction) for promo in promos]
-    do_qualify = [True, False, True]
-    if any(do_qualify):
-        [print(promos[i]) for i in range(len(promos)) if do_qualify[i] == True]
+def does_qualify(promotion, transaction):
+    """
+    Checks if a transaction qualifies for this promo
+    """
+    if promotion["qualify"] == "true":
+        # already satsified this
         return True
-        
+    
+    today = datetime.today()
+    curr_amount = promotion["curr_amount"]
+    trans_categories = transaction["categories"]
+    amt = transaction["amount"]
+    promo_type = promotion["type"]
+    try:
+        qualifier = promotion["day"]
+    except:
+        qualifier = promotion["minimum"]
 
-# promotions = create_promotions(business_request)
-# check_transaction(test_transaction, promotions)
+    if transaction["name"] != promotion["name"] and promo_type == "monthly_specific":
+        return False
+    if months[transaction["month"]] != months[promotion["month"]]:
+        return False
+    if promo_type == "day_specific" and today.day == qualifier:
+        return True
+
+    if promo_type == "monthly_category" and not any([category for category in promotion["categories"] if category in transaction["categories"]]):
+        # none of the categories match
+        return False
+
+    # update amount
+    curr_amount += amt
+    result = promos.update_one({'desc': promotion["desc"]}, {"$set": {"curr_amount":curr_amount}}, upsert=True)
+    
+    if curr_amount >= qualifier:
+        # update qualify param
+        result = promos.update_one({'desc': promotion["desc"]}, {"$set": {"qualify":"true"}}, upsert=True)
+        return True
+    else:
+        return False
+
+
+def check_transaction(transaction):
+    """
+    Checks a given transaction against all promotions
+    """
+    for promo in promos.find():
+        if does_qualify(promo, test_transaction):
+            print("You qualified for the {} at {}".format(promo["desc"], promo["name"]))
+
+    return True
+
+
+test_transaction = {
+    "name": "Mos Mos",
+    "categories": [
+        "coffeeshop"
+    ],
+    "amount": 60,
+    "month": "january",
+    "day": 19,
+} 
+
+test_promotions = {
+    "test_promos": [
+        {
+            "name": "Mos Mos",
+            "type": "monthly_category",
+            "desc": "10_percent_discount",
+            "month": "january",
+            "minimum": 50,
+            "discount_percent": 10,
+        },
+        {
+            "name": "Starbucks",
+            "type": "monthly_specific",
+            "desc": "20_percent_discount",
+            "month": "january",
+            "minimum": 50,
+            "discount_percent": 20,
+        },
+        {
+            "name": "McDonalds",
+            "type": "daily_specific",
+            "desc": "30_percent_discount",
+            "month": "january",
+            "day": 31,
+            "minimum": 50,
+            "discount_percent": 30,
+        }
+    ],
+}
+
+# for promo in test_promotions["test_promos"]:
+#     create_promo(promo)
+# check_transaction(test_transaction)
+
