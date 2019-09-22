@@ -73,7 +73,7 @@ def get_qr_code(promotion):
     Creates a QR code with given discount + saves it to "qrcodes" directory
     """
     discount = "{}%".format(promotion["discount_percent"])
-    qr_code = qr.make("{} at {}".format(discount, promotion["name"]))
+    qr_code = qr.make("{} off at {}: {}".format(discount, promotion["name"], promotion["qr_code_id"]))
     qr_code.save('qrcodes/{}_{}_qr_code.jpg'.format(promotion["name"].replace(" ","_"), promotion["_id"]))
 
     return qr_code
@@ -117,6 +117,7 @@ test_promotions = {
             "month": "january",
             "minimum": 50,
             "discount_percent": 10,
+            "qr_code_id": "10AGT"
         },
         {
             "name": "Starbucks",
@@ -125,6 +126,8 @@ test_promotions = {
             "month": "january",
             "minimum": 50,
             "discount_percent": 20,
+            "qr_code_id": "24TYO"
+
         },
         {
             "name": "McDonalds",
@@ -133,11 +136,12 @@ test_promotions = {
             "month": "january",
             "day": 31,
             "discount_percent": 30,
+            "qr_code_id": "www.mcdondalds.com"
         }
     ],
 }
 
 # for promo in test_promotions["test_promos"]:
 #     create_promo(promo)
-check_transactions()
+# check_transactions()
 

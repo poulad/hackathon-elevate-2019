@@ -48,7 +48,7 @@ def preprocess(name):
     return pattern.sub("",name)
 
 
-def form_transaction(transaction):
+def trans_add_category(transaction):
     """
     Populates the "categories" key in the transaction json and pushes to db
     """
@@ -78,8 +78,10 @@ def form_transaction(transaction):
 
     transaction["categories"] = categories
 
-    # push to database?
-    result = trans.insert_one(transaction)
+    return transaction
+
+    # # push to database?
+    # result = trans.insert_one(transaction)
 
 # # what a transaction object will look like (we fill categories, though)
 # test_transaction = {
