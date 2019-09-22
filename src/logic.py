@@ -77,7 +77,7 @@ def get_qr_code(promotion):
     qr_code = qr.make("{} off at {}: {}".format(discount, promotion["name"], promotion["qr_code_id"]))
     qr_code.save('qrcodes/{}_{}_qr_code.jpg'.format(promotion["name"].replace(" ","_"), promotion["_id"]))
 
-    return qr_code
+    return promotion
 
 
 def check_transactions():
@@ -98,7 +98,10 @@ def check_transactions():
 
     return codes
 
+def get_promotions():
+    return list(promos.find())
 
+# get_promotions()
 test_transaction = {
     "name": "Mos Mos",
     "categories": [
@@ -144,5 +147,5 @@ test_promotions = {
 
 # for promo in test_promotions["test_promos"]:
 #     create_promo(promo)
-check_transactions()
+# check_transactions()
 
