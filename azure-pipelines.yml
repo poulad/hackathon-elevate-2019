@@ -12,8 +12,9 @@ steps:
 
 - bash: |
     set +x -e
+    export
 
-    docker_image_id=$(docker inspect uniwards-api/web --format={{.Id}}) 
+    docker_image_id=$(docker inspect registry.heroku.com/uniwards-api/web:66 --format={{.Id}}) 
     echo '~~~~~~~~~~~~~~~~'
     echo "docker_image_id: $docker_image_id"
     echo '~~~~~~~~~~~~~~~~'
