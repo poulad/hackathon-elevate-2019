@@ -9,4 +9,16 @@ steps:
     containerRegistry: heroku
     repository: uniwards-api/web
     command: buildAndPush
-    tags: latest
+
+- task: Bash@3
+  inputs:
+    script: |
+      docker_image_id=$(docker inspect my_image --format={{.Id}}) 
+      echo '~~~~~~~~~~~~~~~~'
+      echo "docker_image_id: $docker_image_id"
+      echo '~~~~~~~~~~~~~~~~'
+      curl -X PATCH "https://api.heroku.com/apps/uniwards-api/formation"    \
+        -H "Authorization: Bearer 53e37733-6f7c-42dc-9f01-b34a14960f94"     \
+        -H "Content-Type: application/json"                                 \
+        -H "Accept: application/vnd.heroku+json; version=3.docker-releases" \
+        -d '{"updates":[{"type":"dyno","docker_image":"$docker_image_id"}]}'
