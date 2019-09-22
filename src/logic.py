@@ -15,18 +15,28 @@ def create_promo(promotion_request):
     """
     :param promotion: (json object) promotion information as a JSON object
     """
-    categories = yelp.search(promotion_request["name"])["businesses"][0]
+    db_promo = {
+        "name": promotion_request['name'],
+        "type": promotion_request["type"],
+        "month": promotion_request["month"],
+        "minimum": promotion_request["minimum"],
+        "desc": promotion_request["desc"],
+        "discount_percent": promotion_request["discount_percent"],
+        "qr_code_id": promotion_request["qr_code_id"]
+    }
+    categories = yelp.search(promotion_request["name"])
     categories = categories['categories']
     categories = [category["alias"] for category in categories]
 
-    promotion_request["categories"] = categories
-    promotion_request["curr_amount"] = 0
-    promotion_request["qualify"] = "false"
+    db_promo["categories"] = categories
+    db_promo["curr_amount"] = 0
+    db_promo["qualify"] = "false"
 
     # push to database
-    result = promos.insert_one(promotion_request)
+    result = promos.insert_one(db_promo)
 
-    return True
+    # return promotion_request
+    return db_promo
 
         
 def does_qualify(promotion, transaction):
@@ -117,16 +127,15 @@ test_promotions = {
         {
             "name": "Mos Mos",
             "type": "monthly_category",
-            "desc": "10_percent_discount",
             "month": "january",
             "minimum": 50,
+            "desc": "10_percent_discount",
             "discount_percent": 10,
             "qr_code_id": "10AGT"
         },
         {
             "name": "Starbucks",
             "type": "monthly_specific",
-            "desc": "20_percent_discount",
             "month": "january",
             "minimum": 50,
             "discount_percent": 20,
