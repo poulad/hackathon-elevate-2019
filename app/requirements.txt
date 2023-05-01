@@ -1,6 +1,6 @@
 requests==2.22.0 
 fuzzywuzzy
-Flask==1.1.1
+Flask==2.3.2
 qrcode==6.1
 pymongo
 dnspython==1.16.0
